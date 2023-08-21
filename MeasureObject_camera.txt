@@ -1,0 +1,43 @@
+import cv2
+
+# تابع برای اندازه‌گیری اجسام در تصویر
+def measure_object_size(frame, width_of_object_in_cm):
+    # تشخیص اجسام در تصویر
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    _, threshold = cv2.threshold(gray_frame, 80, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # اندازه‌گیری هر اجسام
+    for cnt in contours:
+        (x, y, w, h) = cv2.boundingRect(cnt)
+        width_cm = w / width_of_object_in_cm
+        height_cm = h / width_of_object_in_cm
+        area = cv2.contourArea(cnt)
+        text = f"{width_cm:.1f} x {height_cm:.1f} (cm)"
+        cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+    return frame
+
+# آغاز وب‌کم
+cap = cv2.VideoCapture(0)
+
+# عرض اجسام را در سانتی‌متر مشخص کنید
+width_of_object_in_cm = 10.0   
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # اجرای تابع برای اندازه‌گیری اجسام
+    result_frame = measure_object_size(frame, width_of_object_in_cm)
+
+    cv2.imshow("Object Measurement", result_frame)
+
+    key = cv2.waitKey(1)
+    if key == ord("q"):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
